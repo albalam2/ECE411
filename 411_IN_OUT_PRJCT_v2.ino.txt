@@ -1,0 +1,117 @@
+//int maxPeople = 5; // maximum number of people allowed before the alarm goes of
+// This uses Serial Monitor to display Range Finder distance readings
+
+#include "NewPing.h" // NewPing Library
+#include <Servo.h> // Servo library 
+#include <TM1637.h> // Display libraray 
+
+//Sensor1 Hook up HC-SR04 with Trig to Arduino Pin 7 .. Echo to Arduino pin 6
+#define TRIGGER_PIN2 7 
+#define ECHO_PIN2 6
+//Sensor2 Hook up HC-SR04 with Trig to Arduino Pin 4 .. Echo to Arduino pin 5
+#define TRIGGER_PIN 4 
+#define ECHO_PIN 5
+
+// Hook up buzzer pin to 8
+int buzzer = 8;
+// Hook up pin 2 to CLK, and pin 
+ TM1637 tm(2,3);
+// Maximum distance we want to ping for (in centimeters).
+#define MAX_DISTANCE 400  
+
+// NewPing setup of pins and maximum distance.
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // Sensor1
+NewPing sonar2(TRIGGER_PIN2, ECHO_PIN2, MAX_DISTANCE); //Sensor2
+Servo myservo;  // create servo object to control a servo
+float duration, distance, distance2, Case;
+
+// This part is for the diplay:
+int pos = 0;    // variable to store the servo position
+int count = 0;  // variable to count reading of sensors
+
+
+void setup() 
+{
+  Serial.begin(9600);
+  pinMode(buzzer, OUTPUT); // Set pint as an OutPut
+  tm.init();
+  tm.set(2);
+  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  
+}
+
+void loop() 
+{
+  // Send ping, get distance in cm
+  distance = sonar.ping_cm();
+  distance2 = sonar2.ping_cm();
+  
+  // Send count to Serial Monitor
+  Serial.print("count");
+  Serial.println(count);
+  Serial.println("");
+  Serial.println("");
+  
+  
+  if (distance >= 20 && distance <= 50) // Check if the object is within 10 to 50cm 
+  {
+    // print the distance scanned
+    Serial.print("Distance = ");
+    Serial.print(distance);
+    Serial.println(" cm_Entered");
+    // Increase the count by 1
+    count++;
+
+  }
+  if (distance > 50 || distance <= 20) 
+  {
+    Serial.println("Sensor1 Out of range");
+  }
+  
+  
+ if (distance2 >= 20 && distance2 <= 50) 
+  {
+    Serial.print("Distance2= ");
+    Serial.print(distance2);
+    Serial.println(" cm_Exit");
+    count--;
+  }
+  
+  if (distance2 > 50 || distance2 <= 20) 
+  {
+    Serial.println("Sensor2 Out of range");
+  }
+  
+ 
+
+   //Display current people count on 4-digit display
+  tm.display(3, count % 10);
+  int pos2 = count / 10;
+  tm.display(2, pos2 % 10);
+  int pos1 = pos2 / 10;
+  tm.display(1, pos1 % 10);
+  int pos0 = pos1 / 10;
+  tm.display(0, pos0 % 10);
+
+  //If the number of people is too high, trigger the buzzer
+  if(count >= 5){
+      myservo.write(180);              // tell servo to go to position in variable 'pos'
+     digitalWrite(buzzer, HIGH);
+     delay(50);
+     digitalWrite(buzzer, LOW);
+     delay(50);
+     digitalWrite(buzzer, HIGH);
+     delay(50);
+     digitalWrite(buzzer, LOW);
+  }
+  
+  if(count < 20){
+    
+  }
+  else{
+      myservo.write(0);
+     digitalWrite(buzzer, LOW); 
+//
+      }
+   delay(500);
+}
